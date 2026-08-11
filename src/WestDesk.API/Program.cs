@@ -1,0 +1,150 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using WestDesk.Application.Interfaces;
+using WestDesk.Infrastructure.Persistence;
+using WestDesk.Infrastructure.Services;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
+using Hangfire;
+using WestDesk.Application.Services;      
+using WestDesk.Infrastructure.Jobs;
+using WestDesk.Infrastructure.Hubs;
+using Hangfire.PostgreSql;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
+
+builder.Services.AddDbContext<WestDeskDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddHangfire(config => config
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UsePostgreSqlStorage(options => options.UseNpgsqlConnection(builder.Configuration.GetConnectionString("DefaultConnection"))));
+
+builder.Services.AddHangfireServer();
+
+builder.Services.AddSingleton<StackExchange.Redis.IConnectionMultiplexer>(
+    StackExchange.Redis.ConnectionMultiplexer.Connect(builder.Configuration.GetConnectionString("Redis")!));
+builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ITicketService, TicketService>();
+builder.Services.AddScoped<IStripeService, StripeService>();
+builder.Services.AddScoped<IEmailService, SmtpEmailService>();
+builder.Services.AddHttpClient<IAIService, GeminiAIService>();
+builder.Services.AddSignalR();
+
+
+var jwtSecret = builder.Configuration["Jwt:Secret"]!;
+var key = Encoding.UTF8.GetBytes(jwtSecret);
+
+builder.Services
+    .AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+
+    })
+.AddJwtBearer (options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(key)
+
+
+    };
+});
+
+builder.Services.AddAuthorization();
+
+
+builder.Services.AddRateLimiter(options =>
+{
+
+    options.RejectionStatusCode = 429;
+
+
+    options.AddFixedWindowLimiter("fixed", limiterOptions =>
+    {
+        limiterOptions.PermitLimit = 20;              
+        limiterOptions.Window = TimeSpan.FromMinutes(1); 
+        limiterOptions.QueueLimit = 0;                 
+    });
+});
+
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Description = "JWT token'ı 'Bearer {token}' formatında gir."
+    });
+
+    options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
+
+var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseHttpsRedirection();
+
+app.UseCors("AllowFrontend");
+app.UseAuthentication();
+app.UseAuthorization();
+app.UseHangfireDashboard("/hangfire");
+app.UseRateLimiter();
+
+app.MapControllers();
+app.MapHub<TicketHub>("/hubs/ticket");
+
+RecurringJob.AddOrUpdate<TicketReminderJob>(
+    "stale-ticket-reminder",
+    job => job.SendStaleTicketRemindersAsync(),
+    "0 9 * * *"
+);
+
+app.Run();
