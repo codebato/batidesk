@@ -9,7 +9,7 @@ using WestDesk.Infrastructure.Services;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
 using Hangfire;
-using WestDesk.Application.Services;      
+using WestDesk.Application.Services;
 using WestDesk.Infrastructure.Jobs;
 using WestDesk.Infrastructure.Hubs;
 using Hangfire.PostgreSql;
@@ -23,11 +23,11 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins(
                 "http://localhost:5173",
-                "https://batidesk-1.onrender.com" // <-- deploy edilen frontend adresin
+                "https://batidesk-frontend.onrender.com"
               )
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
+                      .AllowAnyHeader()
+                      .AllowAnyMethod()
+                      .AllowCredentials();
     });
 });
 
@@ -62,7 +62,7 @@ builder.Services
         options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 
     })
-.AddJwtBearer (options =>
+.AddJwtBearer(options =>
 {
     options.TokenValidationParameters = new TokenValidationParameters
     {
@@ -89,9 +89,9 @@ builder.Services.AddRateLimiter(options =>
 
     options.AddFixedWindowLimiter("fixed", limiterOptions =>
     {
-        limiterOptions.PermitLimit = 20;              
-        limiterOptions.Window = TimeSpan.FromMinutes(1); 
-        limiterOptions.QueueLimit = 0;                 
+        limiterOptions.PermitLimit = 20;
+        limiterOptions.Window = TimeSpan.FromMinutes(1);
+        limiterOptions.QueueLimit = 0;
     });
 });
 
