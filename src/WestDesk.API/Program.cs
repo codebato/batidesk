@@ -21,13 +21,15 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5173")
+        policy.WithOrigins(
+                "http://localhost:5173",
+                "https://batidesk-1.onrender.com" // <-- deploy edilen frontend adresin
+              )
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
     });
 });
-
 
 builder.Services.AddDbContext<WestDeskDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
