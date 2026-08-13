@@ -13,6 +13,7 @@ using WestDesk.Application.Services;
 using WestDesk.Infrastructure.Jobs;
 using WestDesk.Infrastructure.Hubs;
 using Hangfire.PostgreSql;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -94,43 +95,17 @@ builder.Services.AddRateLimiter(options =>
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
-{
-    options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-    {
-        Name = "Authorization",
-        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
-        Scheme = "Bearer",
-        BearerFormat = "JWT",
-        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-        Description = "JWT token'ı 'Bearer {token}' formatında gir."
-    });
 
-    options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
-    {
-        {
-            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-            {
-                Reference = new Microsoft.OpenApi.Models.OpenApiReference
-                {
-                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            Array.Empty<string>()
-        }
-    });
-});
+// --- OpenAPI (native .NET 10 desteği - Swashbuckle yerine) ---
+builder.Services.AddOpenApi();
 
 var port = Environment.GetEnvironmentVariable("PORT") ?? "5004";
 builder.WebHost.UseUrls($"http://+:{port}");
 var app = builder.Build();
 
-
-
-
-    app.UseSwagger();
-    app.UseSwaggerUI();
+// --- OpenAPI endpoint + Scalar UI ---
+app.MapOpenApi();
+app.MapScalarApiReference(); // arayüz: /scalar/v1
 
 
 app.UseHttpsRedirection();
