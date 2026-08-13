@@ -13,8 +13,10 @@ export function useTicketHub(onNewTicket: (ticket: Ticket) => void) {
     const token = localStorage.getItem("token");
     if (!token) return;
 
+    const hubBaseUrl = import.meta.env.VITE_API_URL.replace("/api", "");
+
     const connection = new signalR.HubConnectionBuilder()
-      .withUrl("http://localhost:5004/hubs/ticket", {
+      .withUrl(`${hubBaseUrl}/hubs/ticket`, {
         accessTokenFactory: () => token,
       })
       .withAutomaticReconnect() 
