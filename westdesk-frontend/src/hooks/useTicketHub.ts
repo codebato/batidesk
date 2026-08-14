@@ -29,7 +29,11 @@ export function useTicketHub(onNewTicket: (ticket: Ticket) => void) {
     connection
       .start()
       .then(() => setIsConnected(true))
-      .catch((err) => console.error("SignalR bağlantı hatası:", err));
+      .catch((err) => {
+        console.error("SignalR bağlantı hatası:", err);
+        localStorage.removeItem("token");
+        window.location.href = "/login";
+      });
 
     connectionRef.current = connection;
 
