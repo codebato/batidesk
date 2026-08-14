@@ -23,7 +23,7 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins(
                 "http://localhost:5173",
-                "https://westdesk-frontend.onrender.com"
+                "https://batidesk-frontend.onrender.com"
               )
                       .AllowAnyHeader()
                       .AllowAnyMethod()
@@ -121,17 +121,21 @@ var app = builder.Build();
 
 // --- OpenAPI endpoint + Scalar UI ---
 app.MapOpenApi();
-app.MapScalarApiReference(); // arayüz: /scalar/v1
+app.MapScalarApiReference();
 
-
-app.UseHttpsRedirection();
-
+// 1. CORS en başta olmalı ki tarayıcıdan gelen preflight (OPTIONS) istekleri engellenmeden karşılansın
 app.UseCors("AllowFrontend");
+
+// 2. Yönlendirmeler ve Güvenlik
+app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+
+// 3. Ek Araçlar
 app.UseHangfireDashboard("/hangfire");
 app.UseRateLimiter();
 
+// 4. Endpoint'ler
 app.MapControllers();
 app.MapHub<TicketHub>("/hubs/ticket");
 
