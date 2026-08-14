@@ -23,7 +23,7 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins(
                 "http://localhost:5173",
-                "https://batidesk-frontend.onrender.com"
+                "https://westdesk-frontend.onrender.com"
               )
                       .AllowAnyHeader()
                       .AllowAnyMethod()
