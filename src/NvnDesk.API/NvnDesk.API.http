@@ -1,0 +1,6 @@
+@NvnDesk.API_HostAddress = http://localhost:5004
+
+GET {{NvnDesk.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/NvnDesk.API/NvnDesk.API.csproj" />
+    <Project Path="src/NvnDesk.Application/NvnDesk.Application.csproj" />
+    <Project Path="src/NvnDesk.Domain/NvnDesk.Domain.csproj" />
+    <Project Path="src/NvnDesk.Infrastructure/NvnDesk.Infrastructure.csproj" />
+  </Folder>
+</Solution>

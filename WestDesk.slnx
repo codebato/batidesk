@@ -1,8 +1,0 @@
-<Solution>
-  <Folder Name="/src/">
-    <Project Path="src/WestDesk.API/WestDesk.API.csproj" />
-    <Project Path="src/WestDesk.Application/WestDesk.Application.csproj" />
-    <Project Path="src/WestDesk.Domain/WestDesk.Domain.csproj" />
-    <Project Path="src/WestDesk.Infrastructure/WestDesk.Infrastructure.csproj" />
-  </Folder>
-</Solution>
