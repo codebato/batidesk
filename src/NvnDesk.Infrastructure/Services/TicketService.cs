@@ -71,7 +71,6 @@ public class TicketService : ITicketService
 
         var response = MapToResponse(ticket, creator?.FullName ?? "", null);
 
-
         await _hubContext.Clients.Group($"tenant-{currentTenantId}")
             .SendAsync("ReceiveNewTicket", response);
 
@@ -90,6 +89,7 @@ public class TicketService : ITicketService
         }
 
         var tickets = await _context.Tickets
+            .Where(t => t.TenantId == currentTenantId)
             .Include(t => t.CreatedByUser)
             .Include(t => t.AssignedToUser)
             .OrderByDescending(t => t.CreatedAt)
@@ -108,7 +108,7 @@ public class TicketService : ITicketService
         var ticket = await _context.Tickets
             .Include(t => t.CreatedByUser)
             .Include(t => t.AssignedToUser)
-            .FirstOrDefaultAsync(t => t.Id == ticketId);
+            .FirstOrDefaultAsync(t => t.Id == ticketId && t.TenantId == currentTenantId);
 
         if (ticket is null) return null;
 
@@ -120,7 +120,7 @@ public class TicketService : ITicketService
         var ticket = await _context.Tickets
             .Include(t => t.CreatedByUser)
             .Include(t => t.AssignedToUser)
-            .FirstOrDefaultAsync(t => t.Id == ticketId);
+            .FirstOrDefaultAsync(t => t.Id == ticketId && t.TenantId == currentTenantId);
 
         if (ticket is null)
         {

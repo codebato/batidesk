@@ -26,13 +26,18 @@ export function useTicketHub(onNewTicket: (ticket: Ticket) => void) {
       onNewTicket(ticket);
     });
 
-    connection
+connection
       .start()
       .then(() => setIsConnected(true))
       .catch((err) => {
         console.error("SignalR bağlantı hatası:", err);
-        localStorage.removeItem("token");
-        window.location.href = "/login";
+        const isUnauthorized =
+          err?.message?.includes("401") || err?.statusCode === 401;
+        if (isUnauthorized) {
+          localStorage.removeItem("token");
+          window.location.href = "/login";
+        }
+        // diğer hatalarda (timeout, sunucu uykuda vs.) sessizce yeniden dener, kullanıcıyı atmaz
       });
 
     connectionRef.current = connection;

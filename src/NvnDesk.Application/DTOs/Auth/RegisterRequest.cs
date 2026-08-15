@@ -1,6 +1,6 @@
 namespace NvnDesk.Application.DTOs.Auth;
 
-// Login/Register başarılı olunca client'a geri dönecek cevap.
+
 public class AuthResponse
 {
     public string Token { get; set; } = string.Empty;   // JWT token, sonraki isteklerde header'da kullanılacak
