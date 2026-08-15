@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { login } from "../api/auth";
 
 export function Login() {
@@ -41,6 +41,10 @@ export function Login() {
         required
       />
       <button type="submit">Giriş Yap</button>
+      <p>
+        Hesabın yok mu? <Link to="/register">Kayıt ol</Link>
+    </p>
     </form>
+    
   );
 }
