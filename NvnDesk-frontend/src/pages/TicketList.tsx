@@ -2,19 +2,20 @@ import { useCallback, useEffect, useState } from "react";
 import { getAllTickets, createTicket } from "../api/tickets";
 import { useTicketHub } from "../hooks/useTicketHub";
 import type { Ticket } from "../types/ticket";
+import { useNavigate } from "react-router-dom";
 
 export function TicketList() {
+
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-
+  const navigate = useNavigate();
 
   useEffect(() => {
     getAllTickets().then(setTickets);
   }, []);
 
   const handleNewTicket = useCallback((newTicket: Ticket) => {
-
     setTickets((prev) => [newTicket, ...prev]);
   }, []);
 
@@ -50,7 +51,12 @@ export function TicketList() {
 
       <ul>
         {tickets.map((ticket) => (
-          <li key={ticket.id}>
+          // onClick + cursor:pointer eklendi -> satıra tıklayınca detay sayfasına gidiyor
+          <li
+            key={ticket.id}
+            onClick={() => navigate(`/tickets/${ticket.id}`)}
+            style={{ cursor: "pointer" }}
+          >
             <strong>{ticket.title}</strong> — {ticket.status} — {ticket.priority}
             {ticket.category && <span> [{ticket.category}]</span>}
             {ticket.summary && <p>{ticket.summary}</p>}

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Login } from "./pages/Login";
 import { TicketList } from "./pages/TicketList";
+import TicketDetail from "./pages/TicketDetail";
 
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -22,6 +23,14 @@ function App() {
           }
         />
         {}
+        <Route
+          path="/tickets/:id"
+          element={
+            <RequireAuth>
+              <TicketDetail />
+            </RequireAuth>
+          }
+        />
         <Route path="/" element={<Navigate to="/tickets" replace />} />
       </Routes>
     </BrowserRouter>
