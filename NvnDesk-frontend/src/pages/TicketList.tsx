@@ -6,10 +6,10 @@ import { useNavigate } from "react-router-dom";
 
 export function TicketList() {
 
+  const navigate = useNavigate();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const navigate = useNavigate();
 
   useEffect(() => {
     getAllTickets().then(setTickets);
@@ -29,9 +29,16 @@ export function TicketList() {
     setDescription("");
   }
 
+  function handleLogout() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("userEmail");
+    navigate("/login");
+  }
+
   return (
     <div>
       <h2>Ticket'lar {isConnected ? "🟢 Canlı" : "🔴 Bağlanıyor..."}</h2>
+      <button onClick={handleLogout}>Çıkış Yap</button>
 
       <form onSubmit={handleCreateTicket}>
         <input
