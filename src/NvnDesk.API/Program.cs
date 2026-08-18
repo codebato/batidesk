@@ -23,11 +23,12 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins(
                 "http://localhost:5173",
+                "http://localhost:5174",
                 "https://batidesk-frontend.onrender.com"
               )
-                      .AllowAnyHeader()
-                      .AllowAnyMethod()
-                      .AllowCredentials();
+                              .AllowAnyHeader()
+                              .AllowAnyMethod()
+                              .AllowCredentials();
     });
 });
 
