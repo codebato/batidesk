@@ -1,20 +1,24 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getTicketById, updateTicketStatus } from "../api/tickets";
 import { STATUS_FLOW, type Ticket, type TicketStatus } from "../types/ticket";
 
+
+const statusBadgeClass: Record<TicketStatus, string> = {
+  Open: "badge-status-open",
+  InProgress: "badge-status-inprogress",
+  Resolved: "badge-status-resolved",
+  Closed: "badge-status-closed",
+};
+
 export default function TicketDetail() {
-  // URL'den :id parametresini alıyoruz (App.tsx'te route'u tanımlarken kullanacağız)
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [loading, setLoading] = useState(true);
-  const [updating, setUpdating] = useState(false); // buton spam'ini önlemek için
+  const [updating, setUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Sayfa açılınca ticket'ı çek
   useEffect(() => {
     if (!id) return;
     getTicketById(id)
@@ -23,8 +27,6 @@ export default function TicketDetail() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  // STATUS_FLOW dizisinde mevcut durumun bir sonrasını buluyoruz.
-  // Closed'daysa artık ilerleyecek durum yok, null dönüyoruz -> buton gizlenecek.
   const getNextStatus = (current: TicketStatus): TicketStatus | null => {
     const currentIndex = STATUS_FLOW.indexOf(current);
     if (currentIndex === -1 || currentIndex === STATUS_FLOW.length - 1) return null;
@@ -35,7 +37,6 @@ export default function TicketDetail() {
     if (!ticket) return;
     setUpdating(true);
     try {
-      // UpdateTicketRequest'teki her alan nullable olduğu için sadece status gönderiyoruz
       const updated = await updateTicketStatus(ticket.id, newStatus);
       setTicket(updated);
     } catch {
@@ -45,36 +46,94 @@ export default function TicketDetail() {
     }
   };
 
-  if (loading) return <p>Yükleniyor...</p>;
-  if (error) return <p>{error}</p>;
-  if (!ticket) return <p>Ticket bulunamadı.</p>;
+  // Yükleniyor / hata / bulunamadı durumlarında da aynı sayfa iskeletini
+  // (app-shell + page-content) kullanıyoruz ki geçiş anında sayfa "zıplamasın".
+  if (loading) {
+    return (
+      <div className="app-shell">
+        <div className="page-content">
+          <p>Yükleniyor...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !ticket) {
+    return (
+      <div className="app-shell">
+        <div className="page-content">
+          <p>{error ?? "Ticket bulunamadı."}</p>
+        </div>
+      </div>
+    );
+  }
 
   const nextStatus = getNextStatus(ticket.status);
 
   return (
-    <div style={{ maxWidth: 700, margin: "0 auto", padding: "1.5rem" }}>
-      <button onClick={() => navigate("/tickets")}>&larr; Listeye dön</button>
-
-      <h1>{ticket.title}</h1>
-      <p>{ticket.description}</p>
-
-      <div style={{ display: "flex", gap: "1rem", margin: "1rem 0" }}>
-        <span><strong>Durum:</strong> {ticket.status}</span>
-        <span><strong>Öncelik:</strong> {ticket.priority}</span>
-        <span><strong>Oluşturan:</strong> {ticket.createdByName}</span>
-        {ticket.assignedToName && <span><strong>Atanan:</strong> {ticket.assignedToName}</span>}
-      </div>
-
-      {ticket.category && <p><strong>AI Kategori:</strong> {ticket.category}</p>}
-      {ticket.summary && <p><strong>AI Özet:</strong> {ticket.summary}</p>}
-
-      {nextStatus ? (
-        <button disabled={updating} onClick={() => handleStatusChange(nextStatus)}>
-          {updating ? "Güncelleniyor..." : `Durumu "${nextStatus}" yap`}
+    <div className="app-shell">
+      <div className="page-content" style={{ maxWidth: 700 }}>
+        <button className="detail-back" onClick={() => navigate("/tickets")}>
+          ← Listeye dön
         </button>
-      ) : (
-        <p><em>Bu ticket kapatılmış, ilerletilecek durum yok.</em></p>
-      )}
+
+        <div className="detail-card">
+          <h1>{ticket.title}</h1>
+          <p className="detail-description">{ticket.description}</p>
+
+          {/* Ticket'a dair temel bilgiler — grid şeklinde 4 kutu */}
+          <div className="detail-meta">
+            <div className="detail-meta-item">
+              <span className="detail-meta-label">Durum</span>
+              <span className={`badge ${statusBadgeClass[ticket.status]}`}>
+                {ticket.status}
+              </span>
+            </div>
+            <div className="detail-meta-item">
+              <span className="detail-meta-label">Öncelik</span>
+              <span className="detail-meta-value">{ticket.priority}</span>
+            </div>
+            <div className="detail-meta-item">
+              <span className="detail-meta-label">Oluşturan</span>
+              <span className="detail-meta-value">{ticket.createdByName}</span>
+            </div>
+            {ticket.assignedToName && (
+              <div className="detail-meta-item">
+                <span className="detail-meta-label">Atanan</span>
+                <span className="detail-meta-value">{ticket.assignedToName}</span>
+              </div>
+            )}
+          </div>
+
+          {/* AI kategori/özet varsa vurgulu kutucuklarda göster */}
+          {ticket.category && (
+            <div className="ai-insight">
+              <div className="ai-insight-label">AI Kategori</div>
+              <p>{ticket.category}</p>
+            </div>
+          )}
+          {ticket.summary && (
+            <div className="ai-insight">
+              <div className="ai-insight-label">AI Özet</div>
+              <p>{ticket.summary}</p>
+            </div>
+          )}
+
+          <div className="detail-actions">
+            {nextStatus ? (
+              <button
+                className="btn btn-primary"
+                disabled={updating}
+                onClick={() => handleStatusChange(nextStatus)}
+              >
+                {updating ? "Güncelleniyor..." : `Durumu "${nextStatus}" yap`}
+              </button>
+            ) : (
+              <p className="closed-note">Bu ticket kapatılmış, ilerletilecek durum yok.</p>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
