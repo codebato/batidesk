@@ -18,7 +18,7 @@ public class TicketService : ITicketService
     private readonly IConnectionMultiplexer _redis;
     private readonly IEmailService _emailService;
     private readonly IAIService _aiService;
-    private readonly IHubContext<TicketHub> _hubContext; // yeni bağımlılık: real-time bildirim için
+    private readonly IHubContext<TicketHub> _hubContext;
 
     public TicketService(NvnDeskDbContext context, IConnectionMultiplexer redis, IEmailService emailService, IAIService aiService, IHubContext<TicketHub> hubContext)
     {
@@ -28,6 +28,11 @@ public class TicketService : ITicketService
         _aiService = aiService;
         _hubContext = hubContext;
     }
+
+    // Cache key'ini tek bir yerden üretmek için küçük bir yardımcı metot.
+    // Aynı formatı 3 farklı yerde (GetAll, Create, Update) elle yazmak yerine
+    // buradan çağırıyoruz — ileride key formatı değişirse tek yerden değişir.
+    private static string GetCacheKey(Guid tenantId) => $"tickets:tenant:{tenantId}";
 
     public async Task<TicketResponse> CreateAsync(CreateTicketRequest request, Guid currentUserId, Guid currentTenantId)
     {
@@ -45,6 +50,13 @@ public class TicketService : ITicketService
 
         _context.Tickets.Add(ticket);
         await _context.SaveChangesAsync();
+
+        // ÖNEMLİ: Yeni ticket veritabanına yazıldı, ama Redis'teki liste cache'i
+        // hâlâ eski (bu ticket'ı içermeyen) halini tutuyor. Cache'i burada
+        // siliyoruz ki bir sonraki GetAllAsync çağrısı veritabanından taze
+        // veri çeksin ve cache'i doğru içerikle yeniden doldursun.
+        var db = _redis.GetDatabase();
+        await db.KeyDeleteAsync(GetCacheKey(currentTenantId));
 
         var creator = await _context.Users.FindAsync(currentUserId);
 
@@ -80,7 +92,7 @@ public class TicketService : ITicketService
     public async Task<List<TicketResponse>> GetAllAsync(Guid currentTenantId)
     {
         var db = _redis.GetDatabase();
-        var cacheKey = $"tickets:tenant:{currentTenantId}";
+        var cacheKey = GetCacheKey(currentTenantId);
         var cachedData = await db.StringGetAsync(cacheKey);
 
         if (cachedData.HasValue)
@@ -136,6 +148,11 @@ public class TicketService : ITicketService
         ticket.UpdateAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
+
+        // Aynı sebep: durum (ya da başka bir alan) değişti, DB güncel ama
+        // liste cache'i hâlâ eski veriyi taşıyor. Yine siliyoruz.
+        var db = _redis.GetDatabase();
+        await db.KeyDeleteAsync(GetCacheKey(currentTenantId));
 
         return MapToResponse(ticket, ticket.CreatedByUser.FullName, ticket.AssignedToUser?.FullName);
     }
