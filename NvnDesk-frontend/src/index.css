@@ -206,3 +206,285 @@ p {
 .auth-footer a:hover {
   text-decoration: underline;
 }
+
+/* ============================================
+   APP SHELL (Ticket sayfaları için üst bar + içerik alanı)
+   ============================================ */
+
+.app-shell {
+  min-height: 100vh;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 32px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.topbar-brand h2 {
+  font-size: 18px;
+}
+
+/* Bağlantı durumu noktası (canlı/bağlanıyor) */
+.connection-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.connection-dot.online {
+  background: var(--status-resolved);
+  box-shadow: 0 0 0 3px var(--status-resolved-bg);
+}
+
+.connection-dot.offline {
+  background: var(--status-progress);
+}
+
+.connection-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.page-content {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+/* ============================================
+   TICKET OLUŞTURMA FORMU
+   ============================================ */
+
+.create-ticket-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 20px 24px;
+  margin-bottom: 28px;
+}
+
+.create-ticket-card h3 {
+  font-size: 15px;
+  margin-bottom: 14px;
+}
+
+.create-ticket-form {
+  display: flex;
+  gap: 12px;
+}
+
+.create-ticket-form .input-field {
+  flex: 1;
+}
+
+.create-ticket-form .btn {
+  flex-shrink: 0;
+  width: auto;
+  padding: 10px 20px;
+}
+
+/* ============================================
+   TICKET LİSTESİ
+   ============================================ */
+
+.ticket-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ticket-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  text-align: left;
+}
+
+.ticket-row:hover {
+  border-color: var(--primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.ticket-row-main {
+  flex: 1;
+  min-width: 0; /* metin taşmasını önlemek için */
+}
+
+.ticket-row-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-h);
+  margin-bottom: 4px;
+}
+
+.ticket-row-summary {
+  font-size: 13px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ticket-row-badges {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Durum ve öncelik rozetleri (badge) — ortak taban stil */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge-status-open      { color: var(--status-open);     background: var(--status-open-bg); }
+.badge-status-inprogress{ color: var(--status-progress); background: var(--status-progress-bg); }
+.badge-status-resolved  { color: var(--status-resolved); background: var(--status-resolved-bg); }
+.badge-status-closed    { color: var(--status-closed);   background: var(--status-closed-bg); }
+
+.badge-priority {
+  color: var(--text-muted);
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+}
+
+/* ============================================
+   TICKET DETAY SAYFASI
+   ============================================ */
+
+.detail-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  margin-bottom: 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.detail-back:hover {
+  color: var(--primary);
+}
+
+.detail-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 32px;
+}
+
+.detail-card h1 {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.detail-description {
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+.detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  padding: 16px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+
+.detail-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detail-meta-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.detail-meta-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-h);
+}
+
+.ai-insight {
+  background: var(--primary-bg);
+  border: 1px solid var(--accent-border, var(--primary));
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+}
+
+.ai-insight-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.ai-insight p {
+  font-size: 14px;
+  color: var(--text-h);
+}
+
+.detail-actions {
+  margin-top: 24px;
+}
+
+.detail-actions .btn {
+  width: auto;
+  padding: 10px 20px;
+}
+
+.closed-note {
+  color: var(--text-muted);
+  font-size: 14px;
+  font-style: italic;
+  margin-top: 24px;
+}
